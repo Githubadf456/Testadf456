@@ -1,0 +1,55 @@
+{
+	"name": "dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "campaign_csvfile",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Region as string,",
+				"          Country as string,",
+				"          Product_Category as string,",
+				"          Campaign_Name as string,",
+				"          Revenue as double,",
+				"          Revenue_Target as double,",
+				"          City as string,",
+				"          State as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     skipLines: 1) ~> source1",
+				"source1 select(mapColumn(",
+				"          Region,",
+				"          Country,",
+				"          Product_Category,",
+				"          Campaign_Name,",
+				"          each(match(RevenuePart1),",
+				"               RevenuePart1 = $$),",
+				"          Revenue,",
+				"          each(match(RevenueTargetPart1),",
+				"               RevenueTargetPart1 = $$),",
+				"          Revenue_Target,",
+				"          City,",
+				"          State",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1"
+			]
+		}
+	}
+}
