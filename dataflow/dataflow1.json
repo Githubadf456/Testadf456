@@ -6,49 +6,89 @@
 			"sources": [
 				{
 					"dataset": {
-						"referenceName": "campaign_csvfile",
+						"referenceName": "campaign_csv",
 						"type": "DatasetReference"
 					},
 					"name": "source1"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "campaign_table",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
 			"transformations": [
 				{
 					"name": "select1"
+				},
+				{
+					"name": "derivedColumn1"
 				}
 			],
 			"scriptLines": [
 				"source(output(",
-				"          Region as string,",
-				"          Country as string,",
-				"          Product_Category as string,",
-				"          Campaign_Name as string,",
-				"          Revenue as double,",
-				"          Revenue_Target as double,",
-				"          City as string,",
-				"          State as string",
+				"          Column_1 as string,",
+				"          Column_2 as string,",
+				"          Column_3 as string,",
+				"          Column_4 as string,",
+				"          Column_5 as string,",
+				"          Column_6 as double,",
+				"          Column_7 as string,",
+				"          Column_8 as double,",
+				"          Column_9 as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     skipLines: 1) ~> source1",
 				"source1 select(mapColumn(",
-				"          Region,",
-				"          Country,",
-				"          Product_Category,",
-				"          Campaign_Name,",
-				"          each(match(RevenuePart1),",
-				"               RevenuePart1 = $$),",
-				"          Revenue,",
-				"          each(match(RevenueTargetPart1),",
-				"               RevenueTargetPart1 = $$),",
-				"          Revenue_Target,",
-				"          City,",
-				"          State",
+				"          Region = Column_1,",
+				"          Country = Column_2,",
+				"          Product_Category = Column_3,",
+				"          Campaign_Name = Column_4,",
+				"          RevenuePart1 = Column_5,",
+				"          Revenue = Column_6,",
+				"          RevenueTargetPart1 = Column_7,",
+				"          Revenue_Target = Column_8,",
+				"          City = Column_9",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> select1"
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 derive(Revenue = toDecimal(replace(concat(toString(RevenuePart1), toString(Revenue)), '\\\\', ''), 10, 2, '$###,###.##'),",
+				"          Revenue_Target = toDecimal(replace(concat(toString(RevenueTargetPart1), toString(Revenue_Target)), '\\\\', ''), 10, 2, '$###,###.##')) ~> derivedColumn1",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Region as string,",
+				"          Country as string,",
+				"          ProductCategory as string,",
+				"          CampaignName as string,",
+				"          Revenue as decimal(10,2),",
+				"          RevenueTarget as decimal(10,2),",
+				"          City as string,",
+				"          State as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          Region,",
+				"          Country,",
+				"          ProductCategory = Product_Category,",
+				"          CampaignName = Campaign_Name,",
+				"          Revenue,",
+				"          RevenueTarget = Revenue_Target,",
+				"          City",
+				"     )) ~> sink1"
 			]
 		}
 	}
